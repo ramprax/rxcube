@@ -5,6 +5,7 @@ try:
 except ImportError:
     Self = None
 
+import itertools
 
 FACES = 'ULFRBD'
 STATES = 'ULFRBD'
@@ -106,6 +107,14 @@ class Cube(ABC):
                 return self.rotate_Z().rotate_Z()
         raise NotImplementedError(move_str)
 
+    def non_rotational_moves(self):
+        move_suffixes = ("", "'", "2")
+        return [f'{f}{m}' for f, m in itertools.product(FACES, move_suffixes)]
+
+    def whole_cube_rotation_moves(self):
+        axes = 'XYZ'
+        move_suffixes = ("", "'", "2")
+        return [f'{v}{m}' for v, m in itertools.product(axes, move_suffixes)]
 
     def _unpack_faces(self):
         return self._u[:], self._l[:], self._f[:], self._r[:], self._b[:], self._d[:]

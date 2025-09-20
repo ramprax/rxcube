@@ -1,4 +1,5 @@
 import itertools
+import random
 from pathlib import Path
 
 from .cube import from_cube_string, make_cube
@@ -18,7 +19,20 @@ def perform_move_sequence(move_sequence_str, cube):
         if m:
             cube = perform_move(m, cube)
     return cube
-        
+
+
+def generate_scramble(cube):
+    all_moves = cube.non_rotational_moves()
+    return random.choices(all_moves, k=16*cube.size)
+
+
+def scramble(cube):
+    moves = generate_scramble(cube)
+    moves_str = ' '.join(moves)
+    print('Scramble:', moves_str)
+    scrambled_cube = perform_move_sequence(moves_str, cube)
+    return scrambled_cube
+
 
 def to_cube_string(cube):
     return cube.to_cube_string()
@@ -159,7 +173,9 @@ def process_cmd(m, ctx):
     elif m == 'P':
        print(to_cube_string(ctx['cb']))
     elif m == '?' or m == '/':
-        print('''
+        non_rotational_cube_moves = ' '.join(ctx['cb'].non_rotational_moves())
+        whole_cube_rotation_moves = ' '.join(ctx['cb'].whole_cube_rotation_moves())
+        print(f'''
         Control commands:
             ? or /       - Help
             ` or ~       - Status
@@ -167,17 +183,18 @@ def process_cmd(m, ctx):
             p            - Print Cube
             + or =       - Enhance cube display mode (size &/ color)
             - or _       - Simplify cube display mode (size &/ color)
-            ] or }       - Harder puzzle; Increase cube dimensions (from 2x2x2 to 3x3x3)
-            [ or {       - Easier puzzle; Decrease cube dimensions (from 3x3x3 to 2x2x2)
+            ] or }}       - Harder puzzle; Increase cube dimensions (from 2x2x2 to 3x3x3)
+            [ or {{       - Easier puzzle; Decrease cube dimensions (from 3x3x3 to 2x2x2)
             0            - Reset Cube
             1            - Open *
             2            - Save *
+            3 or #       - Scramble
         
-        Cube Moves:
-            R R' R2 U U' U2 F F' F2 L L' L2 B B' B2 D D' D2
+        Cube face moves:
+            {non_rotational_cube_moves}
         
         Whole cube rotations:
-            X X' X2 Y Y' Y2 Z Z' Z2
+            {whole_cube_rotation_moves}
         ''')
         return
     elif m == '`' or m == '~':
@@ -201,6 +218,10 @@ def process_cmd(m, ctx):
         if cb.size != sz:
             ctx['cb'] = cb = make_cube(sz)
             ctx['cube_size'] = sz
+    elif m == '3' or m == '#':
+        ctx['cb'] = scramble(ctx['cb'])
+    elif m in '12':
+        print('Command not implemented yet')
     else:
         try:
             ctx['cb'] = perform_move_sequence(m, ctx['cb'])
@@ -220,7 +241,7 @@ def play_interactive():
         cb = make_cube(3)
         save_to_file(cb, default_cube_file_path)
         
-    ctx = { 'cb': cb, 'cube_size': cb.size, 'cube_display_mode': 'simple' }
+    ctx = { 'cb': cb, 'cube_size': cb.size, 'cube_display_mode': 'small_bg' }
     # process_cmd('?', ctx)
     process_cmd('P', ctx)
     while (m := input('Move (? for help)> ').strip().upper()) != 'Q':
