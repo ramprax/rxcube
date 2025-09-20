@@ -1,0 +1,11 @@
+[project]
+name = "rxcube"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "colorama>=0.4.6",
+]
+[project.scripts]
+rxcube-cli = "rxcube.main:main"
