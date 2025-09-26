@@ -2,7 +2,7 @@ import itertools
 import random
 from pathlib import Path
 
-from .cube import from_cube_string, make_cube
+from .cube import from_cube_string, make_cube, OPPOSITE_FACES
 from .cube_display import print_cube, print_cube_fg_color, print_cube_bg_color, print_large_cube_bg_color
 
 
@@ -21,9 +21,50 @@ def perform_move_sequence(move_sequence_str, cube):
     return cube
 
 
+def generate_random_moves(count, all_moves):
+    return random.choices(all_moves, k=count)
+
+
+def is_move_redundant(move, previous_moves):
+    move_face = move[0]
+    if previous_moves:
+        last_move = previous_moves[-1]
+        last_move_face = last_move[0]
+        if move_face == last_move_face:
+            return True
+
+        last_same_face_move = None
+        last_same_face_move_idx = -1
+        for i, pm in enumerate(previous_moves):
+            if pm[0] == move[0]:
+                last_same_face_move = pm
+                last_same_face_move_idx = i
+
+        opp_face = OPPOSITE_FACES[move_face]
+        non_opp_face_move_count = 0
+        for i in range(last_same_face_move_idx+1, len(previous_moves)):
+            _prev_move_i = previous_moves[i]
+            _prev_move_i_face = _prev_move_i[0]
+            if _prev_move_i_face != opp_face:
+                non_opp_face_move_count += 1
+        if non_opp_face_move_count <= 0:
+            return True
+
+    return False
+
+
+def remove_redundant_moves(move_sequence):
+    non_redundant_moves = []
+    for m in move_sequence:
+        if not is_move_redundant(m, non_redundant_moves):
+            non_redundant_moves.append(m)
+    return non_redundant_moves
+
+
 def generate_scramble(cube):
     all_moves = cube.non_rotational_moves()
-    return random.choices(all_moves, k=16*cube.size)
+    random_moves = generate_random_moves(16*cube.size, all_moves)
+    return remove_redundant_moves(random_moves)
 
 
 def scramble(cube):

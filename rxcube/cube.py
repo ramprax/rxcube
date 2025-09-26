@@ -8,6 +8,8 @@ except ImportError:
 import itertools
 
 FACES = 'ULFRBD'
+OPPOSITE_FACES = dict([(FACES[_i], _f) for _i, _f in enumerate('DRBLFU')])
+
 STATES = 'ULFRBD'
 
 COLOUR_MAP_OLD = {
@@ -344,6 +346,51 @@ class Cube(ABC):
         new_cube = self.__class__(new_u, new_l, new_f, new_r, new_b, new_d)
 
         return new_cube
+
+    @abstractmethod
+    def face_centre_index(self):
+        raise NotImplementedError()
+
+    def correct_face_orientation(self):
+        u, l, f, r, b, d = self._unpack_faces()
+
+        fci = self.face_centre_index()
+
+        # Where is U?
+        if u[fci] == 'U':
+            ...
+        else:
+            if l[fci] == 'U':
+                u, l, f, r, b, d = self.rotate_z()._unpack_faces()
+            if f[fci] == 'U':
+                u, l, f, r, b, d = self.rotate_x()._unpack_faces()
+            if r[fci] == 'U':
+                u, l, f, r, b, d = self.rotate_Z()._unpack_faces()
+            if b[fci] == 'U':
+                u, l, f, r, b, d = self.rotate_X()._unpack_faces()
+            if d[fci] == 'U':
+                u, l, f, r, b, d = self.rotate_X().rotate_X()._unpack_faces()
+
+        while l[fci] != 'L':
+            u, l, f, r, b, d = self.rotate_Y()._unpack_faces()
+
+        new_cube = self.__class__(u, l, f, r, b, d)
+
+        return new_cube
+
+    def is_solved(self):
+        print(self.to_cube_string())
+
+        u, l, f, r, b, d = self._unpack_faces()
+        for face in (u, l, f, r, b, d):
+            if len(set(face)) > 1:
+                return False
+
+        cbstr = self.correct_face_orientation().to_cube_string()
+        print(cbstr)
+        new_cbstr = self.make_cube().to_cube_string()
+        print(new_cbstr)
+        return cbstr == new_cbstr
 
     def to_cube_string(self):
         flattened = sum(self._unpack_faces(), [])
@@ -709,6 +756,9 @@ class Cube_3x3x3(Cube):
     def move_d(self):
         return self.rotate_x().move_f().rotate_X()  # rotate_X(move_f(rotate_x(cube)))
 
+    def face_centre_index(self):
+        return 4
+
     @classmethod
     def make_cube(cls):
         """
@@ -790,7 +840,7 @@ class Cube_2x2x2(Cube):
         new_b[0] = l[0]
         new_b[1] = l[1]
 
-        new_cube = Cube_2x2x2(new_u, new_l, new_f, new_r, new_b, new_d)
+        new_cube = self.__class__(new_u, new_l, new_f, new_r, new_b, new_d)
 
         return new_cube
 
@@ -818,7 +868,7 @@ class Cube_2x2x2(Cube):
         new_l[0] = b[0]
         new_l[1] = b[1]
 
-        new_cube = Cube_2x2x2(new_u, new_l, new_f, new_r, new_b, new_d)
+        new_cube = self.__class__(new_u, new_l, new_f, new_r, new_b, new_d)
 
         return new_cube
 
@@ -846,7 +896,7 @@ class Cube_2x2x2(Cube):
         new_d[1] = b[2]
         new_d[3] = b[0]
 
-        new_cube = Cube_2x2x2(new_u, new_l, new_f, new_r, new_b, new_d)
+        new_cube = self.__class__(new_u, new_l, new_f, new_r, new_b, new_d)
 
         return new_cube
 
@@ -874,7 +924,7 @@ class Cube_2x2x2(Cube):
         new_b[2] = d[1]
         new_b[0] = d[3]
 
-        new_cube = Cube_2x2x2(new_u, new_l, new_f, new_r, new_b, new_d)
+        new_cube = self.__class__(new_u, new_l, new_f, new_r, new_b, new_d)
 
         return new_cube
 
@@ -902,7 +952,7 @@ class Cube_2x2x2(Cube):
         new_d[0] = r[2]
         new_d[1] = r[0]
 
-        new_cube = Cube_2x2x2(new_u, new_l, new_f, new_r, new_b, new_d)
+        new_cube = self.__class__(new_u, new_l, new_f, new_r, new_b, new_d)
 
         return new_cube
 
@@ -930,7 +980,7 @@ class Cube_2x2x2(Cube):
         new_r[2] = d[0]
         new_r[0] = d[1]
 
-        new_cube = Cube_2x2x2(new_u, new_l, new_f, new_r, new_b, new_d)
+        new_cube = self.__class__(new_u, new_l, new_f, new_r, new_b, new_d)
 
         return new_cube
 
@@ -958,7 +1008,7 @@ class Cube_2x2x2(Cube):
         new_d[0] = f[0]
         new_d[2] = f[2]
 
-        new_cube = Cube_2x2x2(new_u, new_l, new_f, new_r, new_b, new_d)
+        new_cube = self.__class__(new_u, new_l, new_f, new_r, new_b, new_d)
 
         return new_cube
 
@@ -986,7 +1036,7 @@ class Cube_2x2x2(Cube):
         new_f[0] = d[0]
         new_f[2] = d[2]
 
-        new_cube = Cube_2x2x2(new_u, new_l, new_f, new_r, new_b, new_d)
+        new_cube = self.__class__(new_u, new_l, new_f, new_r, new_b, new_d)
 
         return new_cube
 
@@ -1001,6 +1051,9 @@ class Cube_2x2x2(Cube):
 
     def move_d(self):
         return self.rotate_x().move_f().rotate_X()  # rotate_X(move_f(rotate_x(cube)))
+
+    def face_centre_index(self):
+        return 0
 
 
 def from_cube_string(cube_string):
