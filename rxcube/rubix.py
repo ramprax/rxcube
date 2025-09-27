@@ -1,5 +1,6 @@
 import itertools
 import random
+from functools import partial
 from pathlib import Path
 
 from .cube import from_cube_string, make_cube, OPPOSITE_FACES
@@ -197,16 +198,16 @@ def check_U_moves():
     print("UUUU")
     print_cube(perform_move_sequence("U U U U", cb1))
 
+DISPLAY_MODES = ('simple', 'small_fg', 'small_bg', 'medium_bg', 'large_bg')
+DISPLAY_FUNCS = {
+    'simple': print_cube,
+    'small_fg': print_cube_fg_color,
+    'small_bg': print_cube_bg_color,
+    'medium_bg': partial(print_large_cube_bg_color, columns_per_cell=5),
+    'large_bg': print_large_cube_bg_color,
+}
 
 def process_cmd(m, ctx):
-    display_modes = ('simple', 'small_fg', 'small_bg', 'large_bg')
-    display_funcs = {
-        'simple': print_cube,
-        'small_fg': print_cube_fg_color,
-        'small_bg': print_cube_bg_color,
-        'large_bg': print_large_cube_bg_color,
-    }
-
     m = m.upper().strip()
     if m == '0':
         sz = ctx['cube_size']
@@ -242,9 +243,9 @@ def process_cmd(m, ctx):
         print(ctx)
         return
     elif m == '+' or m == '=':
-        ctx['cube_display_mode'] = display_modes[min(display_modes.index(ctx['cube_display_mode']) + 1, len(display_modes) - 1)]
+        ctx['cube_display_mode'] = DISPLAY_MODES[min(DISPLAY_MODES.index(ctx['cube_display_mode']) + 1, len(DISPLAY_MODES) - 1)]
     elif m == '-' or m == '_':
-        ctx['cube_display_mode'] = display_modes[max(display_modes.index(ctx['cube_display_mode']) - 1, 0)]
+        ctx['cube_display_mode'] = DISPLAY_MODES[max(DISPLAY_MODES.index(ctx['cube_display_mode']) - 1, 0)]
     elif m == '[' or m == '{':
         sz = ctx['cube_size']
         sz = max(2, sz - 1)
@@ -271,7 +272,7 @@ def process_cmd(m, ctx):
             process_cmd('?', ctx)
             return
     
-    display_funcs[ctx['cube_display_mode']](ctx['cb'])
+    DISPLAY_FUNCS[ctx['cube_display_mode']](ctx['cb'])
 
 
 def play_interactive():
